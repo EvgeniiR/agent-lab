@@ -113,8 +113,8 @@ opencode run --agent implementer
 opencode run --agent reviewer
 ```
 
-Note: `implementer` and `reviewer` read from `workspace/current_task.md`, which pipeline writes
-automatically. For manual calls, create this file first:
+Note: `implementer` and `reviewer` read from `workspace/tasks/task-N/spec.md`, which pipeline writes
+automatically. For manual calls, create this file first (e.g., `workspace/tasks/task-1/spec.md`):
 
 ```markdown
 # Current Task
@@ -124,7 +124,7 @@ automatically. For manual calls, create this file first:
 **Goal:** <what this task achieves>
 **Acceptance criteria:**
 - AC-1: <testable condition>
-**Test file:** workspace/tests/task_1_test.<ext>
+**Test file:** workspace/tasks/task-1/test.<ext>
 ```
 
 Each call is a fresh session — agents read state from `workspace/` files, not from chat history.
@@ -145,8 +145,10 @@ workspace/               # Runtime artifacts per feature (created in the target 
   plan.md                # Planner output
   architecture.md        # Planner output
   decisions.md           # Append-only decision log
-  current_task.md        # Pipeline output — active task pointer, overwritten per task
-  tests/                 # Acceptance tests authored by Planner
+  tasks/
+    task-N/
+      spec.md            # Pipeline output — task pointer written before each call
+      test.<ext>         # Acceptance tests authored by Planner
 init.sh                  # Deploy agents to a target project (symlinks + config copy)
 opencode.json.template   # opencode config template
 ```

@@ -44,6 +44,6 @@ Format: ASSUMPTION-N: <what was assumed> — <why this seems right>.
 
 After writing `workspace/requirements.md`, stop and state:
 
-> **Requirements written. Please review `workspace/requirements.md`, edit as needed, then start the Planner.**
+> **Requirements written. Please review `workspace/requirements.md` and edit as needed.**
 
 The human reads, corrects, and approves before Planner runs. This is the only interactive checkpoint for requirements.

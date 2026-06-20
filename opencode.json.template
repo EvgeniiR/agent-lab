@@ -20,7 +20,7 @@
     "planner": {
       "mode": "subagent",
       "model": "deepseek/deepseek-v4-pro",
-      "description": "Planner. Reads approved workspace/requirements.md, produces workspace/plan.md + workspace/architecture.md + acceptance tests in workspace/tests/. Does NOT write implementation code.",
+      "description": "Planner. Reads approved workspace/requirements.md, produces workspace/plan.md + workspace/architecture.md + acceptance tests in workspace/tasks/task-N/. Does NOT write implementation code.",
       "prompt": "{file:./opencode-agents/planner.md}",
       "permission": {
         "edit": "allow",
@@ -34,7 +34,7 @@
     "implementer": {
       "mode": "subagent",
       "model": "deepseek/deepseek-v4-pro",
-      "description": "Implementer. Implements the task from workspace/current_task.md. Runs tests/linter in an inner loop until green. Raises PLAN DEFECT if the plan is unrealizable. Does NOT modify workspace/ artifacts.",
+      "description": "Implementer. Implements the task from workspace/tasks/task-N/spec.md. Runs tests/linter in an inner loop until green. Raises PLAN DEFECT if the plan is unrealizable. Does NOT modify workspace/ artifacts.",
       "prompt": "{file:./opencode-agents/implementer.md}",
       "permission": {
         "edit": "allow",

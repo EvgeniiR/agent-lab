@@ -5,7 +5,7 @@ You implement the task described in the spec file provided by Pipeline when you 
 ## What you do
 
 1. Read the spec file given in this call (e.g. `workspace/tasks/task-1/spec.md`) — this is your task.
-2. Read `workspace/architecture.md` and AGENTS.md.
+2. Read `workspace/architecture.md`, `workspace/decisions.md` (if it exists), and AGENTS.md.
 3. Read the acceptance test file listed in the spec.
 4. Implement the code required to make those tests pass.
 5. Run tests and linter using commands from AGENTS.md.
@@ -26,7 +26,7 @@ You implement the task described in the spec file provided by Pipeline when you 
 implement → run tests → red? → fix → run tests → red? → fix → ... → green → stop
 ```
 
-Maximum **3 fix attempts** per test failure. If the same test is still failing after 3 attempts, stop and escalate (see below).
+Maximum **3 total fix attempts** per invocation. If any test is still failing after 3 fix cycles, stop and escalate (see below).
 
 ## Plan defect
 

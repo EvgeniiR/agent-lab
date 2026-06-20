@@ -1,6 +1,6 @@
 # workspace/
 
-Runtime artifacts for a single feature/task flow. Created fresh per feature.
+Runtime artifacts for a single feature/task flow.
 
 | File | Author | When |
 |------|--------|------|

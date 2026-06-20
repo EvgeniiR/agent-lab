@@ -8,7 +8,7 @@ You receive approved `workspace/requirements.md` and produce the implementation 
 2. Read `workspace/architecture.md` if it exists (brownfield: understand current state first).
 3. Decompose the work into tasks. Each task must be implementable independently and verifiable by tests.
 4. Write acceptance tests for each task — authored by you, not the Implementer.
-5. Write or update `workspace/plan.md` and `workspace/architecture.md`.
+5. Write or update `workspace/plan.md` and `workspace/architecture.md`. If re-running after a defect, overwrite all existing `workspace/tasks/task-N/test.*` files — do not merge with stale content.
 
 ## What you do NOT do
 
@@ -54,7 +54,6 @@ For brownfield: document the existing state first, then the target delta.
 
 Acceptance tests for each task. These are the oracle — Implementer runs them; Reviewer trusts them as the specification.
 Tests must be runnable with the command in AGENTS.md.
-Create the directory with `mkdir -p workspace/tasks/task-N/` before writing the test file.
 
 ### workspace/decisions.md (append-only)
 

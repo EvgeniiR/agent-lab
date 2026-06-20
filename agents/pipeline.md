@@ -33,7 +33,7 @@ Proceed immediately — no human gate here.
 
 ---
 
-## Phase 3 — Implement & Review (per task)
+## Phase 3 — Implement & Review (per task, planner_retries = 0)
 
 For each unchecked task in `workspace/plan.md` (in order), do the following:
 
@@ -54,7 +54,7 @@ For each unchecked task in `workspace/plan.md` (in order), do the following:
 
 Call `@implementer workspace/tasks/task-N/spec.md`.
 
-- If output contains `PLAN DEFECT:`: show the defect to the human and ask "Type **fix** to send to planner, or give another instruction." If fix: call `@planner` with the defect note, then restart Phase 3. Otherwise follow the human's instruction.
+- If output contains `PLAN DEFECT:`: show the defect to the human and ask "Type **fix** to send to planner, or give another instruction." If fix: planner_retries + 1; if planner_retries > 3, stop: "Planner retried 3 times — please edit `workspace/requirements.md` or `workspace/plan.md` manually, then type **retry**." Otherwise call `@planner` with the defect note, then restart Phase 3 from TASK-N (skip already-approved tasks). Otherwise follow the human's instruction.
 - If output contains `ESCALATION:`: show the escalation to the human and ask what to do. Follow the human's instruction.
 - Otherwise: proceed to 3b.
 
@@ -62,10 +62,10 @@ Call `@implementer workspace/tasks/task-N/spec.md`.
 
 Call `@reviewer workspace/tasks/task-N/spec.md`.
 
-- `APPROVE` → print `✓ TASK-N approved.` Move to next task.
+- `APPROVE` → mark the task `[x]` in `workspace/plan.md`, print `✓ TASK-N approved.` Move to next task.
 - `REJECT: CODE DEFECT` AND iterations < 3 → iterations + 1, call `@implementer` again, go back to 3b.
 - `REJECT: CODE DEFECT` AND iterations = 3 → show the defect to the human: "Stuck after 3 attempts on TASK-N. What should I do? (retry / send to planner / skip / abort)"  Follow the human's instruction.
-- `REJECT: PLAN DEFECT` → show the defect to the human: "Plan defect on TASK-N. Type **fix** to send to planner, or give another instruction." If fix: call `@planner` with the defect note, restart Phase 3. Otherwise follow the human's instruction.
+- `REJECT: PLAN DEFECT` → show the defect to the human: "Plan defect on TASK-N. Type **fix** to send to planner, or give another instruction." If fix: planner_retries + 1; if planner_retries > 3, stop: "Planner retried 3 times — please edit `workspace/requirements.md` or `workspace/plan.md` manually, then type **retry**." Otherwise call `@planner` with the defect note, then restart Phase 3 from TASK-N (skip already-approved tasks). Otherwise follow the human's instruction.
 
 ---
 
@@ -83,4 +83,4 @@ When all tasks are approved:
 - Do not write code, tests, or architecture.
 - Do not skip Gate 1 (requirements) — always wait for human **ok**.
 - Do not retry a CODE DEFECT more than 3 times without human input.
-- Read structured signals from agents: `APPROVE`, `REJECT: CODE DEFECT`, `REJECT: PLAN DEFECT`, `PLAN DEFECT:`.
+- Read structured signals from agents: `APPROVE`, `REJECT: CODE DEFECT`, `REJECT: PLAN DEFECT`, `PLAN DEFECT:`, `ESCALATION:`.

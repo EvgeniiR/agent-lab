@@ -11,7 +11,7 @@ if [ "$TARGET_DIR" = "$AGENT_LAB_DIR" ]; then
   exit 1
 fi
 
-mkdir -p "$TARGET_DIR/opencode-agents" "$TARGET_DIR/workspace/tests"
+mkdir -p "$TARGET_DIR/opencode-agents" "$TARGET_DIR/workspace/tasks"
 
 created=() skipped=() overrides=()
 

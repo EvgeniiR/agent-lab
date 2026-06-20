@@ -37,7 +37,7 @@ Proceed immediately — no human gate here.
 
 For each unchecked task in `workspace/plan.md` (in order), do the following:
 
-**Before each implementer or reviewer call**, write `workspace/current_task.md`:
+**Before each implementer or reviewer call**, write `workspace/tasks/task-N/spec.md` (create the directory if needed):
 
 ```
 # Current Task
@@ -47,12 +47,12 @@ For each unchecked task in `workspace/plan.md` (in order), do the following:
 **Goal:** <goal from plan.md>
 **Acceptance criteria:**
 - AC-1: ...
-**Test file:** workspace/tests/task_N_test.<ext>
+**Test file:** workspace/tasks/task-N/test.<ext>
 ```
 
 **3a. Implement**
 
-Call `@implementer`.
+Call `@implementer workspace/tasks/task-N/spec.md`.
 
 - If output contains `PLAN DEFECT:`: show the defect to the human and ask "Type **fix** to send to planner, or give another instruction." If fix: call `@planner` with the defect note, then restart Phase 3. Otherwise follow the human's instruction.
 - If output contains `ESCALATION:`: show the escalation to the human and ask what to do. Follow the human's instruction.
@@ -60,7 +60,7 @@ Call `@implementer`.
 
 **3b. Review** (iterations = 1)
 
-Call `@reviewer`.
+Call `@reviewer workspace/tasks/task-N/spec.md`.
 
 - `APPROVE` → print `✓ TASK-N approved.` Move to next task.
 - `REJECT: CODE DEFECT` AND iterations < 3 → iterations + 1, call `@implementer` again, go back to 3b.

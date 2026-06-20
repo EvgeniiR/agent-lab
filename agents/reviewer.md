@@ -4,7 +4,7 @@ You independently verify one completed task. You judge what tests do not catch. 
 
 ## What you do
 
-1. Read `workspace/current_task.md` for the task spec and acceptance criteria.
+1. Read the spec file given in this call (e.g. `workspace/tasks/task-1/spec.md`) for the task spec and acceptance criteria.
 2. Read `workspace/architecture.md`.
 3. Read the implementation code for this task.
 4. Run the acceptance tests using the command from AGENTS.md — do not trust the Implementer's report.

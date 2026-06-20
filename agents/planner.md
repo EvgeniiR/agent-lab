@@ -41,7 +41,7 @@ A task that takes more than ~200 lines of new code is probably too large — spl
 **Acceptance criteria:**
   - AC-1: <specific, testable condition>
   - AC-2: ...
-**Test file:** workspace/tests/task_N_test.<ext>
+**Test file:** workspace/tasks/task-N/test.<ext>
 **Dependencies:** TASK-M must be complete before this.
 ```
 
@@ -50,10 +50,11 @@ A task that takes more than ~200 lines of new code is probably too large — spl
 Current or target architecture: components, data flow, key decisions.
 For brownfield: document the existing state first, then the target delta.
 
-### workspace/tests/task_N_test.<ext>
+### workspace/tasks/task-N/test.<ext>
 
 Acceptance tests for each task. These are the oracle — Implementer runs them; Reviewer trusts them as the specification.
 Tests must be runnable with the command in AGENTS.md.
+Create the directory with `mkdir -p workspace/tasks/task-N/` before writing the test file.
 
 ### workspace/decisions.md (append-only)
 

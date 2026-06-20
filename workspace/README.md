@@ -8,5 +8,5 @@ Runtime artifacts for a single feature/task flow. Created fresh per feature.
 | plan.md | Planner | After human approves requirements.md |
 | architecture.md | Planner | Same pass as plan.md |
 | decisions.md | Planner (append-only) | Any architectural decision |
-| tests/task_N_test.* | Planner | One file per task |
-| current_task.md | Pipeline | Overwritten before each implementer/reviewer call |
+| tasks/task-N/test.* | Planner | One file per task, co-located with spec |
+| tasks/task-N/spec.md | Pipeline | Written before each implementer/reviewer call; persists per task |

@@ -3,7 +3,7 @@
 > Architecture Decision Record for the universal framework.
 > Source of truth for architecture. Every new working session (opencode, coding
 > assistants, new chat) should start by reading this file.
-> Status: design frozen, prompts written, awaiting first real-world trial.
+> Status: design frozen, all agent prompts written, awaiting first real-world trial.
 
 ---
 
@@ -80,27 +80,35 @@ Role descriptions:
 ## 4. Flow and two nested loops
 
 ```text
-Intake ──> requirements.md ──[human gate]──>
-Planner ──> plan.md + acceptance tests   (tests authored by Planner, NOT Implementer)
+Pipeline (orchestrator) ──> calls agents in sequence, manages gates and routing
         │
-        ▼  per task from plan.md (granularity = task, not whole codebase)
-  ┌──────────────────────────────────────────────┐
-  │ INNER CHEAP LOOP                              │
-  │ Implementer:                                  │
-  │   writes code → runs tests/linter itself       │
-  │   red? fixes itself, Reviewer is NOT called    │
-  └──────────────────────────────────────────────┘
-        │ only when tests are green
-        ▼
-  ┌──────────────────────────────────────────────┐
-  │ OUTER EXPENSIVE LOOP                          │
-  │ Reviewer: judges what tests don't catch       │
-  │   edge cases, plan conformance, design        │
-  │   can flag PLAN DEFECT (→ back to Planner)    │
-  │   APPROVE / REJECT (+reason)                  │
-  └──────────────────────────────────────────────┘
-        │ APPROVE
-        ▼  next task
+        ├─ Intake ──> requirements.md ──[human gate: ok / edit]──>
+        │
+        ├─ Planner ──> plan.md + acceptance tests   (tests authored by Planner, NOT Implementer)
+        │                                           (prints task list, no gate)
+        │
+        └─ per task (writes current_task.md before each call):
+             │
+             ▼
+       ┌──────────────────────────────────────────────┐
+       │ INNER CHEAP LOOP                              │
+       │ Implementer:                                  │
+       │   writes code → runs tests/linter itself      │
+       │   red? fixes itself, Reviewer is NOT called   │
+       │   PLAN DEFECT → [human] → Planner             │
+       │   ESCALATION  → [human decides]               │
+       └──────────────────────────────────────────────┘
+             │ only when tests are green
+             ▼
+       ┌──────────────────────────────────────────────┐
+       │ OUTER EXPENSIVE LOOP                          │
+       │ Reviewer: judges what tests don't catch       │
+       │   edge cases, plan conformance, design        │
+       │   APPROVE / REJECT: CODE DEFECT (→ retry)     │
+       │              REJECT: PLAN DEFECT (→ [human])  │
+       └──────────────────────────────────────────────┘
+             │ APPROVE
+             ▼  next task
 ```
 
 Key mechanics:
@@ -121,9 +129,7 @@ Key mechanics:
 
 - Limit of **2–3 iterations**, then human decision.
 - Escalation presents the human with a **specific disagreement**, not "it didn't work".
-- Distinguish two types of unresolved review:
-  - *Same bug repeats* → Implementer cannot fix → escalate to human.
-  - *New bug each time* → loop doesn't converge → task poorly decomposed → back to Planner.
+- After 3 REJECT cycles on the same task → pipeline escalates to human with the accumulated context.
 - Review granularity = **one task** (anchored to decomposition in `plan.md`).
   Stop-condition emerges naturally: task closed → next task.
 - **Human checkpoint at the `requirements.md` gate, not interactive Q&A.**
@@ -137,7 +143,8 @@ Key mechanics:
 Separation whose violation makes the system brittle:
 
 - **Role prompt** — *how the role behaves*, generic, project-independent. Lives in the agent
-  definition (`.opencode/agents/<role>.md`). Contains NO project facts.
+  definition (`opencode-agents/<role>.md` in the target project, sourced from `agents/` in this repo).
+  Contains NO project facts.
 - **AGENTS.md** — *stable facts about this project* (stack, build/test/lint commands,
   conventions, non-obvious patterns). Read by all roles automatically. Contains NO role
   behavior — otherwise each role gets polluted with instructions for others.
@@ -157,7 +164,7 @@ workspace/
   plan.md            # Planner output: task decomposition
   architecture.md    # architecture / current codebase state
   decisions.md       # append-only, with rationale (anti-drift)
-  src/
+  current_task.md    # Pipeline output: active task pointer, overwritten before each implementer/reviewer call
   tests/             # acceptance tests authored by Planner
 ```
 
@@ -165,10 +172,11 @@ workspace/
 
 ## 8. Permissions (per-agent in opencode)
 
-- **Planner** — read-only for code writing (can write only plan/architecture/tests).
-- **Reviewer** — read-only for code + **bash** (runs tests/linter).
-- **Implementer** — write/edit code + **bash** (runs tests in inner loop).
-- **Intake** — writes only requirements.md.
+- **Pipeline** — edit (writes `workspace/current_task.md`) + read; no bash; does not write code.
+- **Intake** — edit (writes `workspace/requirements.md`) + read; no bash.
+- **Planner** — edit (writes plan/architecture/tests only) + read; no bash.
+- **Implementer** — write/edit code + **bash** (runs tests in inner loop); does not modify workspace/ artifacts.
+- **Reviewer** — read-only for code + **bash** (runs tests/linter); no edit.
 
 ---
 
@@ -198,16 +206,19 @@ Lighter mechanisms (lightweight, but without them brownfield and re-runs break):
 ## 10. Two-repo architecture and generation
 
 Goal (destination, NOT first step):
-- **Repo A — universal framework**: human-written agent templates + AGENTS.md skeleton.
-- **Repo B — project instance**: generated `.opencode/agents/` + AGENTS.md + workspace.
+- **Repo A — universal framework** (this repo): human-written agent templates in `agents/` + templates.
+- **Repo B — project instance**: `opencode-agents/` + AGENTS.md + workspace.
 
-Generation = **thin scaffolder** (cookiecutter-style): copies templates, substitutes
-facts (stack, test/lint commands, which roles are active). NOT an LLM prompt generator
-(expensive, instance drift from template, imports degradation from ETH research, overengineering).
+Deployment today: `init.sh` **symlinks** agent prompts from Repo A into `opencode-agents/` of the
+target project (not copies — changes to Repo A propagate instantly to all linked projects).
+`opencode.json` and `AGENTS.md` are copied once and owned by the project.
 
 Project *behavioral* deviations (e.g. security-critical Reviewer with a different checklist)
-— through manual per-project override: own `reviewer.md` in project's `.opencode/agents/`
-overrides the global one. No generator needed for this.
+— through manual per-project override: replace the symlink with a real file in `opencode-agents/`.
+`init.sh` detects real files and skips them on re-run. No generator needed for this.
+
+Full scaffolder (phase 2, after first live run): same principle as today but with variable substitution
+for stack, test commands, active roles.
 
 ---
 
@@ -237,12 +248,15 @@ The generator is phase 2, after the first live run.
 
 ---
 
-## 13. Open question / next step
+## 13. Current status
 
-Write the first real role prompt. **Fork: Reviewer or Intake?**
-- *Reviewer* — the most subtle, defines the quality ceiling (REJECT format, boundary
-  of "what tests catch vs what the model judges", plan-defect flag). Argument: sets the bar
-  that the rest adapt to.
-- *Intake* — start of the flow, simpler, gives a quick first end-to-end run.
+**Step 1 complete:** all 5 agent prompts written (`pipeline`, `intake`, `planner`, `implementer`,
+`reviewer`) and tested for internal consistency.
 
-No decision on this point yet.
+**Step 2 in progress:** first live test on a real project — pending.
+
+Deployment via `init.sh`: symlinks agent prompts into target project's `opencode-agents/`,
+copies `opencode.json` and `AGENTS.md` templates. Entry point: `opencode run --agent pipeline "..."`.
+
+**Next:** run the pipeline on a real feature end-to-end. Observe what breaks or requires
+improvisation. Those friction points define the actual variation parameters for the scaffolder (phase 2).

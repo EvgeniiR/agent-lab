@@ -44,8 +44,7 @@ copy_once() {
   fi
 }
 
-copy_once "$AGENT_LAB_DIR/opencode.json.template" "$TARGET_DIR/opencode.json"   "opencode.json"
-copy_once "$AGENT_LAB_DIR/AGENTS.md.template"     "$TARGET_DIR/AGENTS.md"       "AGENTS.md"
+copy_once "$AGENT_LAB_DIR/opencode.json.template" "$TARGET_DIR/opencode.json" "opencode.json"
 
 echo ""
 echo "=== agent-lab init: $TARGET_DIR ==="
@@ -54,7 +53,7 @@ for f in "${skipped[@]+"${skipped[@]}"}";   do echo "  skipped  $f (exists)"; do
 for f in "${overrides[@]+"${overrides[@]}"}"; do echo "  override $f (real file kept)"; done
 echo ""
 echo "Next steps:"
-echo "  1. Fill in AGENTS.md (stack, test/lint commands, conventions)"
+echo "  1. Create AGENTS.md — run 'opencode /init' to bootstrap, then trim to <50 lines"
 echo "  2. Review opencode.json (adjust models if needed)"
 echo "  3. Start: opencode run --agent pipeline '<your prompt>'"
 echo ""

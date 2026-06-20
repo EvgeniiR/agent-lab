@@ -34,7 +34,7 @@
     "implementer": {
       "mode": "subagent",
       "model": "deepseek/deepseek-v4-pro",
-      "description": "Implementer. Implements one task from workspace/plan.md. Runs tests/linter in an inner loop until green. Raises PLAN DEFECT if the plan is unrealizable. Does NOT modify workspace/ artifacts.",
+      "description": "Implementer. Implements the task from workspace/current_task.md. Runs tests/linter in an inner loop until green. Raises PLAN DEFECT if the plan is unrealizable. Does NOT modify workspace/ artifacts.",
       "prompt": "{file:./opencode-agents/implementer.md}",
       "permission": {
         "edit": "allow",
@@ -60,12 +60,11 @@
       }
     },
     "pipeline": {
-      "mode": "subagent",
       "model": "deepseek/deepseek-v4-pro",
       "description": "Main entry point. Orchestrates the full pipeline: intake → [human gate] → planner → implementer ↔ reviewer per task. Pauses at human gates and escalations. Call with the feature description as the message.",
       "prompt": "{file:./opencode-agents/pipeline.md}",
       "permission": {
-        "edit": "deny",
+        "edit": "allow",
         "bash": "deny",
         "read": "allow",
         "glob": "allow",

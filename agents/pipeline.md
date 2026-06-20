@@ -55,6 +55,7 @@ For each unchecked task in `workspace/plan.md` (in order), do the following:
 Call `@implementer`.
 
 - If output contains `PLAN DEFECT:`: show the defect to the human and ask "Type **fix** to send to planner, or give another instruction." If fix: call `@planner` with the defect note, then restart Phase 3. Otherwise follow the human's instruction.
+- If output contains `ESCALATION:`: show the escalation to the human and ask what to do. Follow the human's instruction.
 - Otherwise: proceed to 3b.
 
 **3b. Review** (iterations = 1)

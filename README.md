@@ -39,24 +39,21 @@ Human checkpoints: approve requirements, handle escalations. Everything else is 
 
 ## Deploy to a project
 
-**1. Copy agent prompts**
+**1. Run init.sh**
 
 ```bash
-mkdir -p opencode-agents
-cp /path/to/agent-lab/agents/*.md opencode-agents/
+/path/to/agent-lab/init.sh /path/to/your/project
 ```
 
-**2. Create opencode.json**
+Symlinks agent prompts into `opencode-agents/`, copies `opencode.json.template` → `opencode.json`,
+and `AGENTS.md.template` → `AGENTS.md`. Existing files are never overwritten.
 
-Copy `opencode.json.template` → `opencode.json` in your project root.
-Adjust `model` per role if needed (see design.md §3 for the recommended model split).
+**2. Customize**
 
-**3. Create AGENTS.md**
+- Fill in `AGENTS.md` with your stack, test/lint commands, conventions. Keep it under 50 lines.
+- Adjust `model` per role in `opencode.json` if needed (see design.md §3 for the recommended model split).
 
-Copy `AGENTS.md.template` → `AGENTS.md`. Fill in your stack, test/lint commands, conventions.
-Keep it under 50 lines — opencode reads this automatically and passes it to every agent.
-
-**4. Run**
+**3. Run**
 
 ```bash
 opencode run --agent pipeline "build me a CLI tool that parses CSV and outputs JSON"
@@ -102,7 +99,7 @@ design.md                # Architecture decision record
 
 ## Key design decisions
 
-- **Tests authored by Planner, not Implementer** — prevents correlated oracle (DeepSeek testing exactly what it wrote).
+- **Tests authored by Planner, not Implementer** — prevents correlated oracle (the implementer testing exactly what it wrote).
 - **Reviewer always re-runs tests** — does not trust Implementer's green report.
 - **Two REJECT types** — code defect (→ Implementer) vs plan defect (→ Planner). Different escalation paths.
 - **3-iteration cap** — same bug recurring → escalate to human. New bug each time → task too coarse → back to Planner.

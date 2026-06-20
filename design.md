@@ -3,7 +3,7 @@
 > Architecture Decision Record for the universal framework.
 > Source of truth for architecture. Every new working session (opencode, coding
 > assistants, new chat) should start by reading this file.
-> Status: design frozen, implementation not yet started.
+> Status: design frozen, prompts written, awaiting first real-world trial.
 
 ---
 

@@ -1,21 +1,11 @@
 {
-  // ==========================================================================
-  // Model recommendations (see design.md §3):
-  //   Intake:    Claude  — low volume, subtle work (vague → precise)
-  //   Planner:   Claude  — high-leverage, bad plan poisons everything downstream
-  //   Implementer: DeepSeek — ~80% of all tokens, cheap bulk codegen
-  //   Reviewer:  Claude  — quality gate, must be a different family than Implementer
-  //   Pipeline:  any     — orchestrator, minimal tokens
-  //
-  // Default below is DeepSeek for all. Adjust per role to match your budget.
-  // ==========================================================================
   "$schema": "https://opencode.ai/config.json",
   "model": "deepseek/deepseek-v4-pro",
   "instructions": ["AGENTS.md"],
   "agent": {
     "intake": {
       "mode": "subagent",
-      "model": "deepseek/deepseek-v4-pro",  // Recommended: anthropic/claude-sonnet-4-20250514
+      "model": "deepseek/deepseek-v4-pro",
       "description": "Intake / Requirement Expander. Turns a minimal prompt into workspace/requirements.md. Documents assumptions instead of asking questions. Stops for human review before Planner runs.",
       "prompt": "{file:./opencode-agents/intake.md}",
       "permission": {
@@ -29,7 +19,7 @@
     },
     "planner": {
       "mode": "subagent",
-      "model": "deepseek/deepseek-v4-pro",  // Recommended: anthropic/claude-sonnet-4-20250514
+      "model": "deepseek/deepseek-v4-pro",
       "description": "Planner. Reads approved workspace/requirements.md, produces workspace/plan.md + workspace/architecture.md + acceptance tests in workspace/tests/. Does NOT write implementation code.",
       "prompt": "{file:./opencode-agents/planner.md}",
       "permission": {
@@ -57,7 +47,7 @@
     },
     "reviewer": {
       "mode": "subagent",
-      "model": "deepseek/deepseek-v4-pro",  // Recommended: anthropic/claude-sonnet-4-20250514 (different family than Implementer!)
+      "model": "deepseek/deepseek-v4-pro",
       "description": "Reviewer. Independently verifies one completed task: runs tests, judges what tests don't catch. Outputs APPROVE or REJECT (CODE DEFECT / PLAN DEFECT). Does NOT fix code.",
       "prompt": "{file:./opencode-agents/reviewer.md}",
       "permission": {

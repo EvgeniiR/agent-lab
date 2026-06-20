@@ -49,7 +49,7 @@ cp /path/to/agent-lab/agents/*.md opencode-agents/
 **2. Create opencode.json**
 
 Copy `opencode.json.template` → `opencode.json` in your project root.
-Adjust `model` per role if needed (see design.md §3 for the recommended Claude/DeepSeek split).
+Adjust `model` per role if needed (see design.md §3 for the recommended model split).
 
 **3. Create AGENTS.md**
 

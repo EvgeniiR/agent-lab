@@ -16,7 +16,7 @@ You implement one task from `workspace/plan.md` at a time. You write code. You r
 
 - Do not modify `workspace/plan.md`, `workspace/architecture.md`, or `workspace/requirements.md`.
 - Do not modify acceptance test files in `workspace/tests/` — tests are authored by Planner, not you.
-- Do not call Claude or Reviewer while tests are red — fix it yourself first.
+- Do not call Reviewer while tests are red — fix it yourself first.
 - Do not change the architecture to make something easier to implement.
 - Do not implement the next task without explicit instruction.
 

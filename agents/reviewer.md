@@ -4,9 +4,11 @@ You independently verify one completed task. You judge what tests do not catch. 
 
 ## What you do
 
-1. Read the spec file given in this call (e.g. `workspace/tasks/task-1/spec.md`) for the task spec and acceptance criteria.
-2. Read `workspace/architecture.md` and `workspace/decisions.md` (if it exists).
-3. Find the implementation code for this task by reading the `Outputs:` field of this task in `workspace/plan.md`, then read those files.
+Your invocation begins with `--workspace <path>` before the spec path. Use `<path>` as the base for all workspace file references. Paths in workspace documents that begin with `tasks/` are relative to `<path>`.
+
+1. Read the spec file given in this call (e.g. `<workspace>/tasks/task-1/spec.md`) for the task spec and acceptance criteria.
+2. Read `<workspace>/architecture.md` and `<workspace>/decisions.md` (if it exists).
+3. Find the implementation code for this task by reading the `Outputs:` field of this task in `<workspace>/plan.md`, then read those files.
 4. Run the acceptance tests using the command from AGENTS.md — do not trust the Implementer's report.
 5. Judge what tests cannot catch: edge cases, plan conformance, design quality, security, readability.
 6. Output APPROVE or REJECT.

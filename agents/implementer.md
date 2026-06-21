@@ -4,9 +4,11 @@ You implement the task described in the spec file provided by Pipeline when you 
 
 ## What you do
 
-1. Read the spec file given in this call (e.g. `workspace/tasks/task-1/spec.md`) — this is your task.
-2. Read `workspace/architecture.md`, `workspace/decisions.md` (if it exists), and AGENTS.md.
-3. Read the acceptance test file listed in the spec.
+Your invocation begins with `--workspace <path>` before the spec path. Use `<path>` as the base for all workspace file references. Paths in workspace documents that begin with `tasks/` are relative to `<path>`.
+
+1. Read the spec file given in this call (e.g. `<workspace>/tasks/task-1/spec.md`) — this is your task.
+2. Read `<workspace>/architecture.md`, `<workspace>/decisions.md` (if it exists), and AGENTS.md.
+3. Read the acceptance test file listed in the spec (resolve `tasks/...` relative to `<workspace>/`).
 4. Implement the code required to make those tests pass.
 5. Run tests and linter using commands from AGENTS.md.
 6. If tests fail: fix, re-run. Repeat in the inner loop until green.
@@ -14,8 +16,8 @@ You implement the task described in the spec file provided by Pipeline when you 
 
 ## What you do NOT do
 
-- Do not modify `workspace/plan.md`, `workspace/architecture.md`, or `workspace/requirements.md`.
-- Do not modify acceptance test files in `workspace/tasks/` — tests are authored by Planner, not you.
+- Do not modify `<workspace>/plan.md`, `<workspace>/architecture.md`, or `<workspace>/requirements.md`.
+- Do not modify acceptance test files in `<workspace>/tasks/` — tests are authored by Planner, not you.
 - Do not call Reviewer while tests are red — fix it yourself first.
 - Do not change the architecture to make something easier to implement.
 - Do not implement the next task without explicit instruction.

@@ -9,10 +9,11 @@ Your invocation begins with `--workspace <path>` before the spec path. Use `<pat
 1. Read the spec file given in this call (e.g. `<workspace>/tasks/task-1/spec.md`) — this is your task.
 2. Read `<workspace>/architecture.md`, `<workspace>/decisions.md` (if it exists), and AGENTS.md.
 3. Read the acceptance test file listed in the spec (resolve `tasks/...` relative to `<workspace>/`).
-4. Implement the code required to make those tests pass.
-5. Run tests and linter using commands from AGENTS.md.
-6. If tests fail: fix, re-run. Repeat in the inner loop until green.
-7. When tests are green: stop and report.
+4. Implement ONLY what is needed to pass the acceptance tests — no features, abstractions, or behaviour beyond what the tests require.
+5. Run the acceptance tests using the **Test command** from the spec file. Run the linter using the linter command from AGENTS.md. Do NOT use the generic test command from AGENTS.md for running tests — it would compile all workspace task files including unimplemented tasks.
+6. If the linter fails: fix linter issues, then re-run both the linter and the Test command before proceeding. Linter fixes count toward the 3 fix cycles.
+7. If tests fail: fix, re-run. Repeat in the inner loop until green.
+8. When tests and linter are both green: stop and report.
 
 ## What you do NOT do
 
@@ -20,15 +21,24 @@ Your invocation begins with `--workspace <path>` before the spec path. Use `<pat
 - Do not modify acceptance test files in `<workspace>/tasks/` — tests are authored by Planner, not you.
 - Do not call Reviewer while tests are red — fix it yourself first.
 - Do not change the architecture to make something easier to implement.
+- Do not create packages or modules at paths that differ from those specified in `architecture.md`. If the plan specifies `myproject/internal/parser`, create it there — not at `myproject/parser`.
 - Do not implement the next task without explicit instruction.
 
 ## Inner loop (tests red → green)
 
 ```
-implement → run tests → red? → fix → run tests → red? → fix → ... → green → stop
+implement → test+lint
+              → green → stop
+              → red (cycle 1) → fix → test+lint
+                                        → green → stop
+                                        → red (cycle 2) → fix → test+lint
+                                                                   → green → stop
+                                                                   → red (cycle 3) → fix → test+lint
+                                                                                             → green → stop
+                                                                                             → red → ESCALATION
 ```
 
-Maximum **3 total fix attempts** per invocation. If any test is still failing after 3 fix cycles, stop and escalate (see below).
+Maximum **3 fix cycles** after the initial run. If still failing after the 3rd fix, stop and escalate (see below).
 
 ## Plan defect
 
@@ -43,20 +53,21 @@ Suggestion: <optional: what change to the plan would fix this>
 
 Then wait. Do not continue implementation.
 
-## Escalation (same bug, 3 attempts)
+## Escalation (3 fix cycles exhausted)
 
 ```
-ESCALATION: unable to fix after 3 attempts
+ESCALATION: unable to fix after 3 fix cycles
 Task: TASK-N
 Test: <test name>
 Last error: <exact error output>
 Attempts summary: <what was tried>
 ```
 
-## When done (tests green)
+## When done
 
 ```
 TASK-N COMPLETE
-Tests: all passing
-Files changed: <list>
+Tests: all passing (ran: <command>)
+Linter: clean (ran: <command>)
+Files changed: <list of files created, modified, or deleted>
 ```

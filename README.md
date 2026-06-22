@@ -20,7 +20,7 @@ Minimal prompt → requirements → plan + tests → implement → independent r
 | Agent | Mode | Does |
 |-------|------|------|
 | `pipeline` | **orchestrator** | Single entry point. Drives the full flow, pauses at human gates. |
-| `intake` | subagent | Expands a vague prompt into `workspace/requirements.md`. No interactive Q&A. |
+| `intake` | subagent | Expands a vague prompt into `<run-dir>/requirements.md`. No interactive Q&A. |
 | `planner` | subagent | Decomposes requirements into tasks + acceptance tests. No code. |
 | `implementer` | subagent | Implements one task. Inner loop until tests green. Raises `PLAN DEFECT` instead of silently changing architecture. |
 | `reviewer` | subagent | Independently verifies one task. `APPROVE` or `REJECT`. Does not fix. |
@@ -29,11 +29,14 @@ Minimal prompt → requirements → plan + tests → implement → independent r
 
 ## Flow
 
+All artifacts for a run live under `workspace/<YYYYMMDD-HHMM-slug>/` (the run dir, created
+by pipeline Phase 0). Paths below are relative to that run dir.
+
 ```
 opencode run --agent pipeline "describe feature"
     │
-    ├─ @intake → workspace/requirements.md → [human: ok / edit]
-    ├─ @planner → workspace/plan.md + tests → (task list shown, no gate)
+    ├─ @intake → <run-dir>/requirements.md → [human: ok / edit]
+    ├─ @planner → <run-dir>/plan.md + tests → (task list shown, no gate)
     └─ per task:
          @implementer → tests green (inner loop)
                       → PLAN DEFECT → [human] → @planner
@@ -58,23 +61,6 @@ Human checkpoints: approve requirements, handle escalations and plan defects. Ev
 
 Intake and Planner are nearly free by volume. The expensive token burn goes to the budget model.
 
-### Model configuration profiles
-
-| Profile | Pipeline | Intake | Planner | Implementer | Reviewer | Use when |
-|---------|----------|--------|---------|-------------|----------|----------|
-| Enterprise max | `opencode/claude-sonnet-4-6` | `opencode/gpt-5.4` | `opencode/claude-opus-4-8` | `opencode/gpt-5.3-codex` | `opencode/claude-opus-4-8` | Quality matters more than cost. |
-| Production ready | `deepseek/deepseek-v4-pro` | `opencode/gpt-5.1` | `opencode/claude-sonnet-4-6` | `deepseek/deepseek-v4-pro` | `opencode/claude-sonnet-4-6` | Serious production work with strong independent review. |
-| Balanced | `deepseek/deepseek-v4-pro` | `deepseek/deepseek-v4-pro` | `opencode/gpt-5.1` | `deepseek/deepseek-v4-pro` | `opencode/claude-haiku-4-5` | Better planning/review without moving all token-heavy work to premium models. |
-| Pet quality bump | `deepseek/deepseek-v4-pro` | `deepseek/deepseek-v4-pro` | `opencode/qwen3.7-plus` | `deepseek/deepseek-v4-pro` | `opencode/qwen3.7-plus` | Recommended low-cost upgrade over using DeepSeek everywhere. |
-| Cheap pet | `opencode/deepseek-v4-flash` | `deepseek/deepseek-v4-pro` | `opencode/qwen3.7-plus` | `deepseek/deepseek-v4-pro` | `opencode/qwen3.7-plus` | Lower cost, still keeps planning/review independent. |
-| Ultra cheap | `opencode/deepseek-v4-flash` | `opencode/deepseek-v4-flash` | `opencode/qwen3.5-plus` | `opencode/deepseek-v4-flash` | `opencode/minimax-m2.7` | Experiments and drafts only. |
-
-This preserves the main cost advantage because Implementer burns most tokens, while Planner and Reviewer get a different model family for higher-quality planning and independent verification.
-
-After changing `opencode.json`, restart opencode. Model config is loaded at startup.
-
-**When to revisit opencode:** if manual role orchestration becomes painful, look at Kilo Code CLI — built on top of opencode, so the skill transfers directly.
-
 ---
 
 ## Three context layers
@@ -98,11 +84,27 @@ Separator rule: behavior → agent prompts; stable project facts → AGENTS.md; 
 **1. Run init.sh**
 
 ```bash
+# Default template (all DeepSeek v4 Pro)
 /path/to/agent-lab/init.sh /path/to/your/project
+
+# Advanced template (intake/reviewer on Qwen3.7, planner on GLM-5.2,
+# implementer on DeepSeek v4 Pro, pipeline on DeepSeek v4 Flash)
+/path/to/agent-lab/init.sh /path/to/your/project advanced
 ```
 
-Symlinks agent prompts into `opencode-agents/`, copies `opencode.json.template` → `opencode.json`.
+Symlinks agent prompts into `opencode-agents/`, copies the chosen template → `opencode.json`.
 Existing files are never overwritten.
+
+**Available templates:**
+
+| Template | Pipeline | Intake | Planner | Implementer | Reviewer |
+|----------|----------|--------|---------|-------------|----------|
+| `default` | `deepseek/deepseek-v4-pro` | `deepseek/deepseek-v4-pro` | `deepseek/deepseek-v4-pro` | `deepseek/deepseek-v4-pro` | `deepseek/deepseek-v4-pro` |
+| `advanced` | `deepseek/deepseek-v4-flash` | `opencode-go/qwen3.7-plus` | `opencode-go/glm-5.2` | `deepseek/deepseek-v4-pro` | `opencode-go/qwen3.7-max` |
+
+> The `advanced` template uses the `opencode-go/` provider for Qwen3.7 / GLM-5.2. That
+> provider must exist in your opencode setup or model resolution will fail at startup —
+> adjust the prefix in `opencode.json` if your gateway uses a different provider id.
 
 **2. Customize**
 
@@ -117,32 +119,27 @@ opencode run --agent pipeline "build me a CLI tool that parses CSV and outputs J
 
 `pipeline` drives the full flow and pauses to ask you at each gate. That's the only command you need.
 
-**Advanced — per-role manual control:**
+**Resuming a run:**
 
-Each role can also be called independently (useful for debugging or re-running one step):
+The pipeline pauses at the requirements gate. Continue the same session (instead of
+starting a new one) with `--continue`:
 
 ```bash
-opencode run --agent intake "build me a CLI that..."
-opencode run --agent planner
-opencode run --agent implementer
-opencode run --agent reviewer
+opencode run --agent pipeline "build me a CLI that parses CSV and outputs JSON"
+# ... pipeline writes requirements.md and stops at the gate ...
+opencode run --agent pipeline --continue "ok"     # approve and proceed
 ```
 
-Note: `implementer` and `reviewer` read from `workspace/tasks/task-N/spec.md`, which pipeline writes
-automatically. For manual calls, create this file first (e.g., `workspace/tasks/task-1/spec.md`):
+Always repeat `--agent pipeline` on `--continue` — otherwise opencode resumes with the
+default primary agent and the orchestration logic is lost.
 
-```markdown
-# Current Task
-
-## TASK-1: <title>
-
-**Goal:** <what this task achieves>
-**Acceptance criteria:**
-- AC-1: <testable condition>
-**Test file:** workspace/tasks/task-1/test.<ext>
-```
-
-Each call is a fresh session — agents read state from `workspace/` files, not from chat history.
+**Note — the role agents are subagents, not direct entry points.** `intake`, `planner`,
+`implementer`, and `reviewer` are declared `"mode": "subagent"`, so `opencode run --agent
+intake ...` will **not** run them — opencode prints *"agent is a subagent, not a primary
+agent"* and falls back to the default `build` agent. They are invoked only by `pipeline`
+(via the Task tool), which passes each one its `--workspace <run-dir>` and spec path
+automatically. To drive a single role by hand for debugging, temporarily remove its
+`"mode": "subagent"` line in `opencode.json` so it becomes a primary agent.
 
 ---
 
@@ -155,17 +152,20 @@ agents/                  # Role prompt templates (source of truth)
   planner.md
   implementer.md
   reviewer.md
-workspace/               # Runtime artifacts per feature (created in the target project)
-  requirements.md        # Intake output — human-gated
-  plan.md                # Planner output
-  architecture.md        # Planner output
-  decisions.md           # Append-only decision log
-  tasks/
-    task-N/
-      spec.md            # Pipeline output — task pointer written before each call
-      test.<ext>         # Acceptance tests authored by Planner
-init.sh                  # Deploy agents to a target project (symlinks + config copy)
-opencode.json.template   # opencode config template
+workspace/               # Runtime artifacts (created in the target project)
+  <YYYYMMDD-HHMM-slug>/   # One run dir per feature (pipeline Phase 0)
+    run.json             # Run metadata: feature, slug, created_at, approved_tasks
+    requirements.md      # Intake output — human-gated
+    plan.md              # Planner output
+    architecture.md      # Planner output
+    decisions.md         # Append-only decision log
+    tasks/
+      task-N/
+        spec.md          # Pipeline output — task pointer written before each call
+        test.<ext>       # Acceptance tests authored by Planner
+init.sh                          # Deploy agents to a target project (symlinks + config copy)
+opencode.json.template           # default opencode config template
+opencode.advanced.json.template  # advanced (mixed-model) config template
 ```
 
 ---

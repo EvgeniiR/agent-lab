@@ -8,9 +8,11 @@ Your invocation begins with `--workspace <path>`. All file reads and writes use 
 
 1. Read `<workspace>/requirements.md` (must be human-approved before you run).
 2. Read `<workspace>/architecture.md` if it exists (brownfield: understand current state first).
-3. Decompose the work into tasks. Each task must be implementable independently and verifiable by tests.
-4. Write acceptance tests for each task — authored by you, not the Implementer.
-5. Write or update `<workspace>/plan.md` and `<workspace>/architecture.md`. If re-running after a defect, overwrite all existing `<workspace>/tasks/task-N/test.*` files — do not merge with stale content.
+3. Read `<workspace>/decisions.md` if it exists — respect existing architectural decisions; do not contradict them without documenting the revision.
+4. Decompose the work into tasks. Each task must be implementable in a single Implementer pass and verifiable by tests. Dependencies on prior tasks must be stated explicitly in the Dependencies field.
+5. Write or update `<workspace>/architecture.md` — establish exact package/module paths before writing tests. On re-run, preserve the architecture for already-approved tasks; only update sections relevant to the defective task and onwards.
+6. Write or update `<workspace>/plan.md`. If re-running, read `<workspace>/run.json` and mark tasks listed under `approved_tasks` as `[x]` in the new plan.md — these are already complete.
+7. Write acceptance tests for each task — authored by you, not the Implementer. If re-running after a defect, overwrite test files for the affected task and all subsequent tasks; do not touch test files for already-approved tasks.
 
 ## What you do NOT do
 
@@ -38,7 +40,7 @@ A task that takes more than ~200 lines of new code is probably too large — spl
 ## TASK-N: <title>
 
 **Goal:** What this task achieves.
-**Inputs:** Files to read (architecture.md, specific src/ files, ...).
+**Inputs:** Specific src/ files relevant to this task (brownfield only).
 **Outputs:** Files to create or modify.
 **Acceptance criteria:**
   - AC-1: <specific, testable condition>
@@ -52,12 +54,20 @@ A task that takes more than ~200 lines of new code is probably too large — spl
 Current or target architecture: components, data flow, key decisions.
 For brownfield: document the existing state first, then the target delta.
 
+If the target language uses import paths (Go, Python packages, etc.), specify the **exact** module/package path for every component — e.g. `myproject/internal/parser`, not just "a parser module". Tests you write must import from these exact paths. Implementer is required to match them.
+
 ### &lt;workspace&gt;/tasks/task-N/test.&lt;ext&gt;
 
 Acceptance tests for each task. These are the oracle — Implementer runs them; Reviewer trusts them as the specification.
-Tests must be runnable with the command in AGENTS.md.
+Tests must be runnable with the scoped test command that Pipeline writes into spec.md (the test runner from AGENTS.md, applied to the task's directory).
+Each acceptance criterion must have at least one test case. Tests must verify observable behavior, not internal implementation details.
 
 ### &lt;workspace&gt;/decisions.md (append-only)
 
 Any architectural or scope decision made here, with rationale.
-Format: `## DECISION-N (date): <title>\n<why>`.
+Use the `created_at` date from `<workspace>/run.json` for the date field. Format:
+
+```
+## DECISION-N (date): <title>
+<why>
+```

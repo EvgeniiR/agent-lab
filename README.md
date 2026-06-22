@@ -58,6 +58,21 @@ Human checkpoints: approve requirements, handle escalations and plan defects. Ev
 
 Intake and Planner are nearly free by volume. The expensive token burn goes to the budget model.
 
+### Model configuration profiles
+
+| Profile | Pipeline | Intake | Planner | Implementer | Reviewer | Use when |
+|---------|----------|--------|---------|-------------|----------|----------|
+| Enterprise max | `opencode/claude-sonnet-4-6` | `opencode/gpt-5.4` | `opencode/claude-opus-4-8` | `opencode/gpt-5.3-codex` | `opencode/claude-opus-4-8` | Quality matters more than cost. |
+| Production ready | `deepseek/deepseek-v4-pro` | `opencode/gpt-5.1` | `opencode/claude-sonnet-4-6` | `deepseek/deepseek-v4-pro` | `opencode/claude-sonnet-4-6` | Serious production work with strong independent review. |
+| Balanced | `deepseek/deepseek-v4-pro` | `deepseek/deepseek-v4-pro` | `opencode/gpt-5.1` | `deepseek/deepseek-v4-pro` | `opencode/claude-haiku-4-5` | Better planning/review without moving all token-heavy work to premium models. |
+| Pet quality bump | `deepseek/deepseek-v4-pro` | `deepseek/deepseek-v4-pro` | `opencode/qwen3.7-plus` | `deepseek/deepseek-v4-pro` | `opencode/qwen3.7-plus` | Recommended low-cost upgrade over using DeepSeek everywhere. |
+| Cheap pet | `opencode/deepseek-v4-flash` | `deepseek/deepseek-v4-pro` | `opencode/qwen3.7-plus` | `deepseek/deepseek-v4-pro` | `opencode/qwen3.7-plus` | Lower cost, still keeps planning/review independent. |
+| Ultra cheap | `opencode/deepseek-v4-flash` | `opencode/deepseek-v4-flash` | `opencode/qwen3.5-plus` | `opencode/deepseek-v4-flash` | `opencode/minimax-m2.7` | Experiments and drafts only. |
+
+This preserves the main cost advantage because Implementer burns most tokens, while Planner and Reviewer get a different model family for higher-quality planning and independent verification.
+
+After changing `opencode.json`, restart opencode. Model config is loaded at startup.
+
 **When to revisit opencode:** if manual role orchestration becomes painful, look at Kilo Code CLI — built on top of opencode, so the skill transfers directly.
 
 ---
